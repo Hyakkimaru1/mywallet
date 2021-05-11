@@ -6,23 +6,22 @@ class Block {
   index: number;
   previousHash: string;
   timestamp: number;
-  data: any;
   hash: string;
-  nonce = 0;
+  nonce: number;
   transaction: Transaction[];
   constructor(
     index: number,
     timestamp: number,
-    data: any,
     transaction: Transaction[],
     previousHash = "",
-    hash = ""
+    hash = "",
+    nonce = 0
   ) {
     this.index = index;
     this.timestamp = timestamp;
     this.previousHash = previousHash;
-    this.data = data;
     this.transaction = transaction;
+    this.nonce = nonce;
     if (hash === "") this.hash = this.calculateHash();
     else this.hash = hash;
   }
@@ -32,7 +31,7 @@ class Block {
       this.index +
         this.previousHash +
         this.timestamp +
-        JSON.stringify(this.data) +
+        JSON.stringify(this.transaction) +
         this.nonce
     ).toString();
   };
@@ -61,11 +60,11 @@ class Block {
     index: number,
     previousHash: string,
     timestamp: number,
-    data: any,
+    transaction: Transaction[],
     nonce: number
   ) => {
     return CryptoJS.SHA256(
-      index + previousHash + timestamp + JSON.stringify(data) + nonce
+      index + previousHash + timestamp + JSON.stringify(transaction) + nonce
     ).toString();
   };
 }

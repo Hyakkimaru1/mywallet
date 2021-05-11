@@ -8,15 +8,16 @@ class BlockChain {
   difficulty: number;
   pendingTransactions: Transaction[];
   miningReward: number;
+  public static instance = new BlockChain();
   constructor() {
-    this.difficulty = 2;
-    this.miningReward = 100;
+    this.difficulty = 3;
+    this.miningReward = 10;
     this.pendingTransactions = [];
     this.chain = [this.getGenesisBlock()];
   }
 
   getGenesisBlock = () => {
-    return new Block(0, new Date().getTime() / 1000, "Block chain 0!", [], "0");
+    return new Block(0, new Date().getTime() / 1000, [], "0");
   };
 
   getLastestBlock = () => {
@@ -31,13 +32,12 @@ class BlockChain {
       nextIndex,
       previousBlock.hash,
       nextTimestamp,
-      blockData,
+      blockData.transaction,
       this.difficulty
     );
     return new Block(
       nextIndex,
       nextTimestamp,
-      blockData,
       this.pendingTransactions,
       previousBlock.hash,
       nextHash
@@ -45,21 +45,38 @@ class BlockChain {
   };
 
   addBlock = (newBlock: Block) => {
-    newBlock.previousHash = this.getLastestBlock().hash;
-    newBlock.hash = newBlock.calculateHash();
-    newBlock.mineBlock(this.difficulty);
-    this.chain.push(newBlock);
+    // newBlock.previousHash = this.getLastestBlock().hash;
+    // newBlock.hash = newBlock.calculateHash();
+    // newBlock.mineBlock(this.difficulty);
+    const valid = this.isValidNewBlock(
+      newBlock,
+      this.chain[this.chain.length - 1]
+    );
+    if (valid) {
+      console.log(
+        "NEW BLOCK: ",
+        newBlock.hash,
+        newBlock.index,
+        newBlock.transaction.length
+      );
+      this.chain.push(newBlock);
+    }
+
+    return valid;
   };
 
-  minePendingTransactions(miningRewardAddress) {
-    this.pendingTransactions.push(
-      new Transaction(null, miningRewardAddress, this.miningReward)
+  removePendingTransaction() {
+    this.pendingTransactions.splice(
+      0,
+      this.chain[this.chain.length - 1].transaction.length
     );
+  }
+
+  minePendingTransactions(miningRewardAddress) {
     const index = this.chain[this.chain.length - 1].index + 1;
     const block = new Block(
       index,
       Date.now(),
-      { data: `my block chain ${index}!` },
       this.pendingTransactions,
       this.chain[this.chain.length - 1].hash
     );
@@ -67,11 +84,13 @@ class BlockChain {
 
     this.chain.push(block);
 
-    this.pendingTransactions = [];
+    this.pendingTransactions = [
+      new Transaction(null, miningRewardAddress, this.miningReward),
+    ];
   }
 
   addTransaction(transaction: Transaction) {
-    if (!transaction.fromAddress || !transaction.toAddress) {
+    if (!transaction.toAddress) {
       throw new Error("Transaction must include from address and to address");
     }
 
@@ -84,7 +103,6 @@ class BlockChain {
 
   getBalanceOfAddress(address) {
     let balance = 0;
-
     for (const block of this.chain) {
       for (const trans of block.transaction) {
         if (trans.fromAddress === address) {
@@ -96,8 +114,31 @@ class BlockChain {
         }
       }
     }
-
     return balance;
+  }
+
+  getUserHistory(address) {
+    const history = [];
+
+    for (const block of this.chain) {
+      for (const trans of block.transaction) {
+        if (trans.fromAddress === address || trans.toAddress === address) {
+          history.push(trans);
+        }
+      }
+    }
+    return history;
+  }
+
+  getAllUsersHistory() {
+    const history = [];
+
+    for (const block of this.chain) {
+      for (const trans of block.transaction) {
+        history.push(trans);
+      }
+    }
+    return history;
   }
 
   isValidNewBlock = (newBlock: Block, previousBlock: Block) => {

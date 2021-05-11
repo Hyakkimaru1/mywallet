@@ -12,7 +12,7 @@ router.get("/", (req, res) => {
 
   const myWalletAdress = myKey.getPublic("hex");
 
-  const myBlockChain = new BlockChain();
+  const myBlockChain = BlockChain.instance;
 
   const tx1 = new Transaction(myWalletAdress, "some one here", 10);
   tx1.signTransactions(myKey);
