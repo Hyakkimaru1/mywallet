@@ -11,7 +11,7 @@ class BlockChain {
   public static instance = new BlockChain();
   constructor() {
     this.difficulty = 3;
-    this.miningReward = 10;
+    this.miningReward = 1;
     this.pendingTransactions = [];
     this.chain = [this.getGenesisBlock()];
   }
@@ -60,10 +60,15 @@ class BlockChain {
         newBlock.transaction.length
       );
       this.chain.push(newBlock);
+      this.removePendingTransactionBlock(newBlock);
     }
 
     return valid;
   };
+
+  removePendingTransactionBlock(newBlock) {
+    this.pendingTransactions.splice(0, newBlock.transaction.length);
+  }
 
   removePendingTransaction() {
     this.pendingTransactions.splice(
@@ -106,11 +111,11 @@ class BlockChain {
     for (const block of this.chain) {
       for (const trans of block.transaction) {
         if (trans.fromAddress === address) {
-          balance -= trans.amount;
+          balance -= +trans.amount;
         }
 
         if (trans.toAddress === address) {
-          balance += trans.amount;
+          balance += +trans.amount;
         }
       }
     }
@@ -143,17 +148,29 @@ class BlockChain {
 
   isValidNewBlock = (newBlock: Block, previousBlock: Block) => {
     if (previousBlock.index + 1 !== newBlock.index) {
-      console.log("INVALID INDEX");
+      //console.log("INVALID INDEX");
       return false;
     } else if (previousBlock.hash !== newBlock.previousHash) {
-      console.log("INVALID PREVIOUSHASH");
+      //console.log("INVALID PREVIOUSHASH");
       return false;
     } else if (newBlock.calculateHash() !== newBlock.hash) {
-      console.log("INVALID HASH");
+      // console.log("INVALID HASH");
+      return false;
+    } else if (!this.isValidTransaction(newBlock.transaction)) {
+      // console.log("INVALID transaction");
       return false;
     }
     return true;
   };
+
+  isValidTransaction(transaction) {
+    if (transaction.length > this.pendingTransactions.length) {
+      return false;
+    }
+    //for (let i = 0;this.pendingTransactions)
+    // check transaction has in pendingTransactions
+    return true;
+  }
 
   isValidChain = (blockchainToValiddate: BlockChain = this) => {
     if (

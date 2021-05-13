@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import CryptoJS from "crypto-js";
+import { throws } from "node:assert";
 import Transaction from "./../Transaction";
 
 class Block {
@@ -9,19 +10,22 @@ class Block {
   hash: string;
   nonce: number;
   transaction: Transaction[];
+  miner: string;
   constructor(
     index: number,
     timestamp: number,
     transaction: Transaction[],
     previousHash = "",
     hash = "",
-    nonce = 0
+    nonce = 0,
+    miner = ""
   ) {
     this.index = index;
     this.timestamp = timestamp;
     this.previousHash = previousHash;
     this.transaction = transaction;
     this.nonce = nonce;
+    this.miner = miner;
     if (hash === "") this.hash = this.calculateHash();
     else this.hash = hash;
   }
@@ -43,8 +47,6 @@ class Block {
       this.nonce++;
       this.hash = this.calculateHash();
     }
-
-    console.log("Block mine " + this.hash);
   }
 
   hasValidTransactions() {
